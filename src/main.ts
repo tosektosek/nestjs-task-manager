@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const options = new DocumentBuilder()
+    .addBearerAuth()
     .setTitle('Task manager')
     .setDescription('The task manager API description')
     .setVersion('1.0')
