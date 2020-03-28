@@ -5,7 +5,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { EntityRepository, Repository } from 'typeorm';
 import { AuthCredentialsDto } from './dto/auth-creadentials.dto';
-import { User } from './user.entity';
+import { User, UserRole } from './user.entity';
 import { ErrorCodes } from 'src/shared/error-codes';
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
@@ -17,7 +17,7 @@ export class UserRepository extends Repository<User> {
     user.salt = await bcrypt.genSalt();
 
     user.password = await this.hashPassword(password, user.salt);
-
+    (user.roles as any) = [UserRole.USER];
     try {
       await user.save();
     } catch (e) {
@@ -31,11 +31,11 @@ export class UserRepository extends Repository<User> {
 
   async validateUserPassword(
     authCredentialsDto: AuthCredentialsDto,
-  ): Promise<string> {
+  ): Promise<User> {
     const { username, password } = authCredentialsDto;
     const user = await this.findOne({ username });
     if (user && (await user.validatePassword(password))) {
-      return user.username;
+      return user;
     } else {
       return null;
     }

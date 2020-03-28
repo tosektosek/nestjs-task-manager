@@ -22,14 +22,17 @@ import { TasksService } from './tasks.service';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { User } from 'src/auth/user.entity';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { RolesGuard } from '../shared/guards/roles.guard';
+import { Roles } from 'src/shared/guards/roles.decorator';
 
 @ApiBearerAuth()
 @Controller('tasks')
-@UseGuards(AuthGuard())
+@UseGuards(AuthGuard(), RolesGuard)
 export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get('/')
+  @Roles('user')
   getTasks(
     @Query(ValidationPipe) filterDto: GetTasksFilterDto,
     @GetUser() user: User,
@@ -38,6 +41,7 @@ export class TasksController {
   }
 
   @Get('/:id')
+  @Roles('user')
   getTaskById(
     @Param('id', ParseIntPipe) id: number,
     @GetUser() user: User,
@@ -46,6 +50,7 @@ export class TasksController {
   }
 
   @Post('/')
+  @Roles('user')
   @UsePipes(ValidationPipe)
   createTask(
     @Body() createTaskDto: CreateTaskDto,
@@ -55,6 +60,7 @@ export class TasksController {
   }
 
   @Patch('/:id/status')
+  @Roles('user')
   updateTaskStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body(TaskStatusValidationPipe) updateTaskStatusDto: UpdateTaskStatusDto,
@@ -64,6 +70,7 @@ export class TasksController {
   }
 
   @Delete('/:id')
+  @Roles('user')
   deleteTask(
     @Param('id', ParseIntPipe) id: number,
     @GetUser() user: User,
