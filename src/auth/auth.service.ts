@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { AuthCredentialsDto } from './dto/auth-creadentials.dto';
@@ -41,9 +45,13 @@ export class AuthService {
   }
 
   async refreshToken(refreshTokenDto: RefreshTokenDto) {
-    const { username } = await this.jwtService.verify(
-      refreshTokenDto.refresh_token,
-    );
+    let username;
+    try {
+      username = await this.jwtService.verify(refreshTokenDto.refresh_token)
+        .username;
+    } catch (e) {
+      throw new BadRequestException({error: e.message});
+    }
     const payload: JwtPayload = { username };
 
     const accessToken = await this.jwtService.sign(payload);
