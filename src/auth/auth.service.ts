@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { AuthCredentialsDto } from './dto/auth-creadentials.dto';
 import { UserRepository } from './user.repository';
 import { JwtPayload } from './jwt-payload.interface';
-import { User } from 'src/auth/user.entity';
+import { User, UserRole } from 'src/auth/user.entity';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
@@ -29,12 +29,16 @@ export class AuthService {
       authCredentialsDto,
     );
 
-    const { username } = user;
-    if (!username) {
+    if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload: JwtPayload = { username };
+    const { username, roles } = user;
+
+    const payload: JwtPayload = {
+      username,
+      roles: (roles as any) as UserRole[],
+    };
     const accessToken = await this.jwtService.sign(payload);
     const refreshToken = await this.jwtService.sign(payload, {
       expiresIn: 10000000,
@@ -45,14 +49,17 @@ export class AuthService {
   }
 
   async refreshToken(refreshTokenDto: RefreshTokenDto) {
-    let username;
+    let user;
     try {
-      username = await this.jwtService.verify(refreshTokenDto.refresh_token)
-        .username;
+      user = await this.jwtService.verify(refreshTokenDto.refresh_token);
     } catch (e) {
-      throw new BadRequestException({error: e.message});
+      throw new BadRequestException({ error: e.message });
     }
-    const payload: JwtPayload = { username };
+    const { username, roles } = user;
+    const payload: JwtPayload = {
+      username,
+      roles: (roles as any) as UserRole[],
+    };
 
     const accessToken = await this.jwtService.sign(payload);
     const refreshToken = await this.jwtService.sign(payload, {
